@@ -1,0 +1,52 @@
+# Dependências
+node_modules/
+package-lock.json
+yarn.lock
+
+# Variáveis de ambiente
+.env
+.env.local
+.env.*.local
+
+# Arquivos de log
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Arquivos temporários
+*.tmp
+*.temp
+.cache/
+
+# Build
+dist/
+build/
+.next/
+out/
+
+# Arquivos de teste
+coverage/
+.nyc_output/
+*.test.js.snap
+
+# Arquivos do Supabase local (se houver)
+.supabase/
+
+# Arquivos com informações sensíveis
+database/verificar_usuario.sql
+docs/database/database_model.md
+
