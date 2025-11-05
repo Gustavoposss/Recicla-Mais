@@ -229,11 +229,16 @@ O frontend estará rodando em: `http://localhost:5173`
 
 ## Acesso ao Sistema
 
-### URL de Acesso Local
+### URLs de Acesso
 
+**Local (Desenvolvimento):**
 - **Frontend Web:** http://localhost:5173
 - **Backend API:** http://localhost:3000/api/v1
 - **Health Check:** http://localhost:3000/health
+
+**Produção:**
+- **Backend API:** https://recicla-mais-production.up.railway.app/api/v1
+- **Health Check:** https://recicla-mais-production.up.railway.app/health
 
 ### Credenciais de Teste
 
@@ -250,13 +255,15 @@ UPDATE users SET user_type = 'manager' WHERE email = 'seu@email.com';
 
 ### Deploy em Produção
 
-O sistema pode ser deployado em:
+O sistema está deployado em:
 
-- **Frontend:** Vercel, Netlify, ou qualquer serviço de hosting estático
-- **Backend:** Heroku, Railway, Render, ou qualquer serviço Node.js
+- **Backend:** Railway - https://recicla-mais-production.up.railway.app
+- **Frontend:** [A ser configurado]
 - **Banco de Dados:** Supabase (já está em produção)
 
-**Nota:** Certifique-se de atualizar as variáveis de ambiente com as URLs de produção.
+**URLs de Produção:**
+- **Backend API:** https://recicla-mais-production.up.railway.app/api/v1
+- **Health Check:** https://recicla-mais-production.up.railway.app/health
 
 ## Validação com Público-Alvo
 
