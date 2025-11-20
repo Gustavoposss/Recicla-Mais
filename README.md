@@ -237,8 +237,8 @@ O frontend estará rodando em: `http://localhost:5173`
 - **Health Check:** http://localhost:3000/health
 
 **Produção:**
-- **Backend API:** https://recicla-mais-production.up.railway.app/api/v1
-- **Health Check:** https://recicla-mais-production.up.railway.app/health
+- **Backend API:** https://recicla-mais.onrender.com/api/v1
+- **Health Check:** https://recicla-mais.onrender.com/health
 
 ### Credenciais de Teste
 
@@ -257,13 +257,13 @@ UPDATE users SET user_type = 'manager' WHERE email = 'seu@email.com';
 
 O sistema está deployado em:
 
-- **Backend:** Railway - https://recicla-mais-production.up.railway.app
+- **Backend:** Render - https://recicla-mais.onrender.com
 - **Frontend:** [A ser configurado]
 - **Banco de Dados:** Supabase (já está em produção)
 
 **URLs de Produção:**
-- **Backend API:** https://recicla-mais-production.up.railway.app/api/v1
-- **Health Check:** https://recicla-mais-production.up.railway.app/health
+- **Backend API:** https://recicla-mais.onrender.com/api/v1
+- **Health Check:** https://recicla-mais.onrender.com/health
 
 ## Validação com Público-Alvo
 
