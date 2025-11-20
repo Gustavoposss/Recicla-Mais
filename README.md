@@ -237,14 +237,20 @@ O frontend estará rodando em: `http://localhost:5173`
 - **Health Check:** http://localhost:3000/health
 
 **Produção:**
+- **Frontend Web:** https://recicla-mais-six.vercel.app
 - **Backend API:** https://recicla-mais.onrender.com/api/v1
 - **Health Check:** https://recicla-mais.onrender.com/health
 
 ### Credenciais de Teste
 
-Para criar credenciais de teste:
+Para acesso rápido pelos avaliadores:
 
-1. Acesse o frontend em `http://localhost:5173`
+- **E-mail:** professor@gmail.com
+- **Senha:** password123
+
+> Caso deseje criar novos usuários:
+
+1. Acesse o frontend em `https://recicla-mais-six.vercel.app`
 2. Clique em "Cadastre-se"
 3. Crie uma conta de cidadão
 4. Para criar um gestor, você precisará alterar o `user_type` diretamente no banco de dados:
@@ -258,10 +264,11 @@ UPDATE users SET user_type = 'manager' WHERE email = 'seu@email.com';
 O sistema está deployado em:
 
 - **Backend:** Render - https://recicla-mais.onrender.com
-- **Frontend:** [A ser configurado]
+- **Frontend:** Vercel - https://recicla-mais-six.vercel.app
 - **Banco de Dados:** Supabase (já está em produção)
 
 **URLs de Produção:**
+- **Frontend Web:** https://recicla-mais-six.vercel.app
 - **Backend API:** https://recicla-mais.onrender.com/api/v1
 - **Health Check:** https://recicla-mais.onrender.com/health
 
@@ -269,39 +276,43 @@ O sistema está deployado em:
 
 ### Definição do Público-Alvo
 
-**Status:** Em processo de identificação e contato
-
-O público-alvo específico será identificado e documentado na pasta `validation/` conforme os requisitos da atividade. O processo de validação incluirá:
-
-1. Identificação específica do público-alvo (nome, localização, contexto)
-2. Contato e apresentação do projeto
-3. Coleta de feedback sobre funcionalidades
-4. Implementação de ajustes baseados no feedback
-5. Documentação completa do processo
+- **Entidade:** Associação de Moradores do Conjunto Ceará - Núcleo Recicla Mais  
+- **Local:** Rua 15 de Novembro, 210 – Conjunto Ceará I, Fortaleza/CE  
+- **Representantes:** José Carlos (presidente), Maria Lúcia (vice) e equipe de voluntários  
+- **Data da validação:** 08/11/2025
 
 ### Resumo do Processo de Validação
 
-[Este conteúdo será atualizado após a realização da validação com o público-alvo]
+1. Apresentação presencial do sistema (frontend e backend) usando o deploy em produção.
+2. Demonstração guiada do fluxo completo: cadastro, envio de denúncias com fotos e mapa.
+3. Testes com os celulares dos moradores para registrar pontos de descarte do bairro.
+4. Coleta de feedbacks, priorização e registro das sugestões.
+5. Implementação dos ajustes críticos antes da conclusão do projeto.
 
 ### Principais Feedbacks Recebidos
 
-[Este conteúdo será atualizado após a coleta de feedback]
+- Validar melhor os campos obrigatórios e limitar o tamanho das fotos (implementado).
+- Normalizar latitude/longitude para aceitar vírgula e exibir todos os pontos no mapa (implementado).
+- Adicionar filtros por status/data e exportação de denúncias no painel (planejado).
+- Enviar notificações quando o status de uma denúncia mudar (backlog).
 
 ### Ajustes Implementados
 
-[Este conteúdo será atualizado conforme ajustes forem implementados baseados no feedback]
+- Validações front/back de imagens e campos obrigatórios (`CreateComplaint.jsx`, middleware de upload).
+- Padronização de coordenadas e conversões em `Map.jsx`, `MyComplaints.jsx` e `ManagerDashboard.jsx`.
+- Registro das demais sugestões no backlog para a próxima iteração (README – próximos passos).
 
 **Documentação completa:** Consulte os arquivos em `validation/`:
 - `validation/target_audience.md` - Definição do público-alvo
 - `validation/validation_report.md` - Relatório completo da validação
-- `validation/evidence/` - Evidências fotográficas/vídeo
-- `validation/feedback/` - Feedback detalhado coletado
+- `validation/evidence/relatorio_evidencias.md` - Descrição das fotos e da reunião
+- `validation/feedback/associacao_conjunto_ceara.md` - Feedback detalhado coletado
 
 ## Equipe de Desenvolvimento
 
 ### Membros da Equipe
 
-- **Gustavo de Sousa Possidonio** - Matrícula: 217353
+- **Gustavo de Sousa Possidonio** - Matrícula: 2317353
   - Papel: Desenvolvedor Full Stack
   - Contribuições:
     - Planejamento e arquitetura do sistema
