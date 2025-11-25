@@ -94,10 +94,26 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Usa uma função personalizada para gerar a chave baseada no IP
+  // Isso funciona corretamente mesmo com trust proxy ativado
+  keyGenerator: (req) => {
+    // Tenta obter o IP real do cliente através dos headers X-Forwarded-For
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+      // X-Forwarded-For pode conter múltiplos IPs, pega o primeiro (cliente original)
+      const ips = forwarded.split(',').map(ip => ip.trim());
+      return ips[0] || req.ip;
+    }
+    return req.ip || req.socket.remoteAddress || 'unknown';
+  },
+  // Desabilita a validação do trust proxy (já que estamos usando corretamente)
+  validate: {
+    trustProxy: false
+  },
   // Em desenvolvimento, permite mais requisições
   skip: (req) => {
     // Desabilita completamente em desenvolvimento local
-    return isDevelopment && req.ip === '::1' || req.ip === '127.0.0.1' || req.ip?.startsWith('::ffff:127.0.0.1');
+    return isDevelopment && (req.ip === '::1' || req.ip === '127.0.0.1' || req.ip?.startsWith('::ffff:127.0.0.1'));
   }
 });
 
@@ -109,6 +125,19 @@ const uploadLimiter = rateLimit({
     success: false,
     error: 'RATE_LIMIT_ERROR',
     message: 'Muitos uploads deste IP, tente novamente em alguns minutos.'
+  },
+  // Usa a mesma função de keyGenerator para consistência
+  keyGenerator: (req) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    if (forwarded) {
+      const ips = forwarded.split(',').map(ip => ip.trim());
+      return ips[0] || req.ip;
+    }
+    return req.ip || req.socket.remoteAddress || 'unknown';
+  },
+  // Desabilita a validação do trust proxy
+  validate: {
+    trustProxy: false
   },
   // Em desenvolvimento local, permite mais uploads
   skip: (req) => {
