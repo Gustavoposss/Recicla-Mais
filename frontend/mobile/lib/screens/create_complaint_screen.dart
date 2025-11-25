@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import '../providers/complaint_provider.dart';
 
@@ -19,13 +21,16 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   final List<File> _selectedImages = [];
-  Position? _currentPosition;
-  bool _isLoadingLocation = false;
+  final List<String> _selectedImagePaths = []; // Para web: armazena paths/base64
+  final List<Uint8List> _selectedImageBytes = []; // Para web: armazena bytes da imagem
+  // Coordenadas fixas de Fortaleza (sem geolocalização)
+  final double _defaultLatitude = -3.7319;
+  final double _defaultLongitude = -38.5267;
 
   @override
   void initState() {
     super.initState();
-    _getCurrentLocation();
+    // Não precisa obter localização - usa coordenadas fixas de Fortaleza
   }
 
   @override
@@ -34,52 +39,6 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
     super.dispose();
   }
 
-  Future<void> _getCurrentLocation() async {
-    setState(() => _isLoadingLocation = true);
-    try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-      if (!serviceEnabled) {
-        _setDefaultLocation();
-        return;
-      }
-
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) {
-          _setDefaultLocation();
-          return;
-        }
-      }
-
-      if (permission == LocationPermission.deniedForever) {
-        _setDefaultLocation();
-        return;
-      }
-
-      _currentPosition = await Geolocator.getCurrentPosition();
-      setState(() => _isLoadingLocation = false);
-    } catch (e) {
-      _setDefaultLocation();
-    }
-  }
-
-  void _setDefaultLocation() {
-    // Coordenadas padrão de Fortaleza
-    _currentPosition = Position(
-      latitude: -3.7319,
-      longitude: -38.5267,
-      timestamp: DateTime.now(),
-      accuracy: 0,
-      altitude: 0,
-      altitudeAccuracy: 0,
-      heading: 0,
-      headingAccuracy: 0,
-      speed: 0,
-      speedAccuracy: 0,
-    );
-    setState(() => _isLoadingLocation = false);
-  }
 
   Future<void> _pickImages() async {
     if (_selectedImages.length >= 5) {
@@ -96,17 +55,39 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
     );
 
     if (images.isNotEmpty) {
-      setState(() {
-        final remainingSlots = 5 - _selectedImages.length;
-        final imagesToAdd = images.take(remainingSlots).map((xFile) => File(xFile.path)).toList();
-        _selectedImages.addAll(imagesToAdd);
-      });
+      final remainingSlots = 5 - _selectedImages.length;
+      final imagesToAdd = images.take(remainingSlots).toList();
+      
+      // Processa as imagens de forma assíncrona
+      for (var xFile in imagesToAdd) {
+        if (kIsWeb) {
+          // No web, converte para bytes para usar com Image.memory
+          final bytes = await xFile.readAsBytes();
+          _selectedImageBytes.add(bytes);
+          _selectedImagePaths.add(xFile.path);
+          // Cria um File dummy para manter compatibilidade
+          _selectedImages.add(File(xFile.path));
+        } else {
+          final bytes = await xFile.readAsBytes();
+          _selectedImages.add(File(xFile.path));
+          _selectedImagePaths.add(xFile.path);
+          _selectedImageBytes.add(bytes);
+        }
+      }
+      
+      setState(() {}); // Atualiza a UI após processar todas as imagens
     }
   }
 
   void _removeImage(int index) {
     setState(() {
       _selectedImages.removeAt(index);
+      if (index < _selectedImagePaths.length) {
+        _selectedImagePaths.removeAt(index);
+      }
+      if (index < _selectedImageBytes.length) {
+        _selectedImageBytes.removeAt(index);
+      }
     });
   }
 
@@ -121,21 +102,15 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
       return;
     }
 
-    if (_currentPosition == null) {
-      Fluttertoast.showToast(
-        msg: 'Localização não disponível',
-        backgroundColor: Colors.red,
-      );
-      return;
-    }
-
     final complaintProvider = Provider.of<ComplaintProvider>(context, listen: false);
     
+    // Usa coordenadas fixas de Fortaleza (sem geolocalização)
     final success = await complaintProvider.createComplaint(
       description: _descriptionController.text.trim(),
-      latitude: _currentPosition!.latitude,
-      longitude: _currentPosition!.longitude,
-      photoPaths: _selectedImages.map((file) => file.path).toList(),
+      latitude: _defaultLatitude,
+      longitude: _defaultLongitude,
+      photoPaths: _selectedImagePaths,
+      photoBytes: kIsWeb ? _selectedImageBytes : null, // No web, passa os bytes
     );
 
     if (mounted) {
@@ -213,12 +188,19 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
                               children: [
                                 ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(
-                                    _selectedImages[index],
-                                    width: 120,
-                                    height: 120,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: kIsWeb && index < _selectedImageBytes.length
+                                      ? Image.memory(
+                                          _selectedImageBytes[index],
+                                          width: 120,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          _selectedImages[index],
+                                          width: 120,
+                                          height: 120,
+                                          fit: BoxFit.cover,
+                                        ),
                                 ),
                                 Positioned(
                                   top: 4,
@@ -254,33 +236,6 @@ class _CreateComplaintScreenState extends State<CreateComplaintScreen> {
                           );
                         }
                       },
-                    ),
-                  ),
-                const SizedBox(height: 24),
-                if (_isLoadingLocation)
-                  const Center(child: CircularProgressIndicator())
-                else if (_currentPosition != null)
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Localização',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Lat: ${_currentPosition!.latitude.toStringAsFixed(6)}',
-                          ),
-                          Text(
-                            'Lng: ${_currentPosition!.longitude.toStringAsFixed(6)}',
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 const SizedBox(height: 24),

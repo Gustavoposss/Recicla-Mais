@@ -36,7 +36,15 @@ class Complaint {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       photoUrls: json['photos'] != null
-          ? List<String>.from(json['photos'].map((p) => p['url'] as String))
+          ? List<String>.from(
+              (json['photos'] as List).map((p) {
+                // O Supabase retorna { id, photo_url } ou { url }
+                if (p is Map) {
+                  return (p['photo_url'] ?? p['url'] ?? '') as String;
+                }
+                return '';
+              }).where((url) => url.isNotEmpty),
+            )
           : [],
     );
   }

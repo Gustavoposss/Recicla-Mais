@@ -1,5 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ChangeNotifier, kIsWeb, debugPrint;
 import 'package:dio/dio.dart';
+import 'dart:typed_data';
 import '../models/complaint.dart';
 import '../services/api_service.dart';
 import '../config/api_config.dart';
@@ -72,15 +73,50 @@ class ComplaintProvider with ChangeNotifier {
       final response = await ApiService.get(ApiConfig.myComplaints);
 
       if (response.statusCode == 200) {
-        final data = response.data['data'];
-        if (data is List) {
-          _myComplaints = (data as List)
-              .map((json) => Complaint.fromJson(json as Map<String, dynamic>))
+        final responseData = response.data['data'];
+        debugPrint('Resposta do backend (minhas denúncias): $responseData');
+        
+        // O backend retorna { complaints: [...], pagination: {...} } ou pode retornar diretamente a lista
+        List<dynamic> complaintsList;
+        
+        if (responseData is Map && responseData['complaints'] != null) {
+          // Formato: { complaints: [...], pagination: {...} }
+          complaintsList = responseData['complaints'] as List;
+          debugPrint('Encontradas ${complaintsList.length} denúncias');
+        } else if (responseData is List) {
+          // Formato: lista direta
+          complaintsList = responseData;
+          debugPrint('Encontradas ${complaintsList.length} denúncias (formato lista)');
+        } else {
+          debugPrint('Formato de resposta não reconhecido: ${responseData.runtimeType}');
+          complaintsList = [];
+        }
+        
+        try {
+          _myComplaints = complaintsList
+              .map((json) {
+                try {
+                  return Complaint.fromJson(json as Map<String, dynamic>);
+                } catch (e) {
+                  debugPrint('Erro ao parsear denúncia: $e');
+                  debugPrint('JSON da denúncia: $json');
+                  rethrow;
+                }
+              })
+              .whereType<Complaint>()
               .toList();
+          debugPrint('Denúncias carregadas com sucesso: ${_myComplaints.length}');
+        } catch (e) {
+          debugPrint('Erro ao processar lista de denúncias: $e');
+          _myComplaints = [];
         }
         _error = null;
+      } else {
+        debugPrint('Status code não esperado: ${response.statusCode}');
+        _myComplaints = [];
       }
     } catch (e) {
+      debugPrint('Erro ao carregar minhas denúncias: $e');
       _error = _getErrorMessage(e);
       _myComplaints = [];
     } finally {
@@ -94,6 +130,7 @@ class ComplaintProvider with ChangeNotifier {
     required double latitude,
     required double longitude,
     required List<String> photoPaths,
+    List<Uint8List>? photoBytes, // Para web: bytes das imagens
   }) async {
     _isLoading = true;
     _error = null;
@@ -108,13 +145,26 @@ class ComplaintProvider with ChangeNotifier {
 
       // Adiciona fotos ao FormData
       for (int i = 0; i < photoPaths.length; i++) {
+        MultipartFile file;
+        
+        if (kIsWeb && photoBytes != null && i < photoBytes.length) {
+          // No web, usa bytes diretamente
+          file = MultipartFile.fromBytes(
+            photoBytes[i],
+            filename: 'photo_$i.jpg',
+          );
+        } else {
+          // No mobile, usa o arquivo do sistema
+          file = await MultipartFile.fromFile(
+            photoPaths[i],
+            filename: 'photo_$i.jpg',
+          );
+        }
+        
         formData.files.add(
           MapEntry(
             'photos',
-            await MultipartFile.fromFile(
-              photoPaths[i],
-              filename: 'photo_$i.jpg',
-            ),
+            file,
           ),
         );
       }
