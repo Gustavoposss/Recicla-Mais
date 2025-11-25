@@ -24,26 +24,8 @@ app.set('trust proxy', true);
 // Verifica se está em desenvolvimento
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Middlewares de segurança
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
-
+// CORS deve ser aplicado ANTES de qualquer outro middleware
 // CORS configurado para aceitar requisições de qualquer origem
-// Isso é necessário para:
-// - Apps mobile (APK/IPA) que não têm origem web
-// - Diferentes máquinas de desenvolvimento/teste
-// - Deploy em diferentes ambientes
-// 
-// NOTA: Para produção com requisitos de segurança específicos, 
-// configure CORS_ORIGIN com as origens permitidas separadas por vírgula
 const corsOrigin = process.env.CORS_ORIGIN;
 
 // Função para determinar origem permitida
@@ -64,23 +46,45 @@ const originFunction = (origin, callback) => {
     callback(null, true);
   } else {
     // Por padrão, permite a origem mesmo se não estiver na lista
-    // Isso garante compatibilidade com apps mobile e diferentes ambientes
     callback(null, true);
   }
 };
 
 const corsOptions = {
-  origin: originFunction, // Aceita qualquer origem por padrão
-  credentials: true, // Permite credentials (cookies, headers de autenticação)
+  origin: originFunction,
+  credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type', 
+    'Authorization', 
+    'Accept', 
+    'X-Requested-With',
+    'Origin',
+    'Access-Control-Request-Method',
+    'Access-Control-Request-Headers'
+  ],
   exposedHeaders: ['Content-Length', 'Content-Type'],
   preflightContinue: false,
-  maxAge: 86400 // 24 horas - cache do preflight
+  maxAge: 86400
 };
 
+// Aplica CORS primeiro
 app.use(cors(corsOptions));
+// Tratamento manual do OPTIONS para garantir que funcione
+app.options('*', cors(corsOptions));
+
+// Middlewares de segurança
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+}));
 
 // Rate limiting - proteção contra abuse
 // Em desenvolvimento, limites mais altos para facilitar testes
