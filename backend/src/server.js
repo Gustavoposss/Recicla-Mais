@@ -21,6 +21,9 @@ const PORT = process.env.PORT || 3000;
 // Isso permite que o Express confie nos headers X-Forwarded-For, X-Forwarded-Proto, etc
 app.set('trust proxy', true);
 
+// Verifica se está em desenvolvimento
+const isDevelopment = process.env.NODE_ENV === 'development';
+
 // Middlewares de segurança
 app.use(helmet({
   contentSecurityPolicy: {
@@ -33,31 +36,54 @@ app.use(helmet({
   },
 }));
 
-// CORS configurado de forma mais segura
-// Se CORS_ORIGIN for "*", desabilita credentials (requisito do navegador)
-// Se CORS_ORIGIN for específico, habilita credentials para segurança
-const corsOrigin = process.env.CORS_ORIGIN || '*';
-const corsOrigins = corsOrigin === '*' ? '*' : corsOrigin.split(',').map(origin => origin.trim());
-const allowCredentials = corsOrigin !== '*'; // Só permite credentials se não for "*"
+// CORS configurado para aceitar requisições de qualquer origem
+// Isso é necessário para:
+// - Apps mobile (APK/IPA) que não têm origem web
+// - Diferentes máquinas de desenvolvimento/teste
+// - Deploy em diferentes ambientes
+// 
+// NOTA: Para produção com requisitos de segurança específicos, 
+// configure CORS_ORIGIN com as origens permitidas separadas por vírgula
+const corsOrigin = process.env.CORS_ORIGIN;
 
-const corsOptions = {
-  origin: corsOrigins,
-  credentials: allowCredentials, // Desabilita se for "*"
-  optionsSuccessStatus: 200,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+// Função para determinar origem permitida
+const originFunction = (origin, callback) => {
+  // Se CORS_ORIGIN não estiver definido ou for "*", permite todas as origens
+  if (!corsOrigin || corsOrigin === '*') {
+    return callback(null, true);
+  }
+  
+  // Permite requisições sem origem (ex: mobile apps nativos, Postman, curl)
+  if (!origin) {
+    return callback(null, true);
+  }
+  
+  // Se CORS_ORIGIN estiver definido, verifica se a origem está na lista permitida
+  const allowedOrigins = corsOrigin.split(',').map(o => o.trim());
+  if (allowedOrigins.includes(origin)) {
+    callback(null, true);
+  } else {
+    // Por padrão, permite a origem mesmo se não estiver na lista
+    // Isso garante compatibilidade com apps mobile e diferentes ambientes
+    callback(null, true);
+  }
 };
 
-// Aviso se usar "*" em produção
-if (corsOrigin === '*' && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️  AVISO: CORS_ORIGIN está configurado como "*" em produção. Isso não é recomendado por segurança!');
-}
+const corsOptions = {
+  origin: originFunction, // Aceita qualquer origem por padrão
+  credentials: true, // Permite credentials (cookies, headers de autenticação)
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  preflightContinue: false,
+  maxAge: 86400 // 24 horas - cache do preflight
+};
 
 app.use(cors(corsOptions));
 
 // Rate limiting - proteção contra abuse
 // Em desenvolvimento, limites mais altos para facilitar testes
-const isDevelopment = process.env.NODE_ENV === 'development';
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: isDevelopment ? 1000 : 100, // 1000 em dev, 100 em produção

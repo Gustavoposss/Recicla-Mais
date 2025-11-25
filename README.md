@@ -31,7 +31,11 @@ A plataforma contribui diretamente para o **ODS 11: Cidades e Comunidades Susten
 
 ### 📱 Status de Implementação Mobile
 
-- ⏳ Frontend Mobile (React Native) - Em desenvolvimento
+- ✅ Frontend Mobile (Flutter) - Implementado
+  - ✅ Login e Registro
+  - ✅ Visualização de denúncias no mapa
+  - ✅ Criação de denúncias com fotos e geolocalização
+  - ✅ Listagem de denúncias próprias
 
 ### 🔄 Funcionalidades Pendentes/Futuras
 
@@ -61,6 +65,16 @@ A plataforma contribui diretamente para o **ODS 11: Cidades e Comunidades Susten
 - **React Leaflet** 4.2.1 - Mapas interativos
 - **React Toastify** 9.1.3 - Notificações
 - **React Hook Form** 7.48.2 - Gerenciamento de formulários
+
+### Frontend Mobile
+- **Flutter** 3.0+ - Framework multiplataforma
+- **Provider** 6.1.1 - Gerenciamento de estado
+- **GoRouter** 12.1.3 - Navegação
+- **Dio** 5.4.0 - Cliente HTTP
+- **Google Maps Flutter** 2.5.0 - Mapas interativos
+- **Geolocator** 10.1.0 - Geolocalização
+- **Image Picker** 1.0.5 - Seleção de imagens
+- **Shared Preferences** 2.2.2 - Armazenamento local
 
 ### Backend
 - **Node.js** 18+ - Runtime JavaScript
@@ -98,6 +112,9 @@ O sistema adota uma **Arquitetura em Camadas** com separação clara de responsa
 │ │ (React.js)  │ │    │ │  REST       │ │    │ │ (PostgreSQL)│ │
 │ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
 │ ┌─────────────┐ │    │ ┌─────────────┐ │    │ ┌─────────────┐ │
+│ │   Mobile    │ │◄──►│ │   Auth      │ │    │ │  Storage    │ │
+│ │  (Flutter)  │ │    │ │  (JWT)      │ │    │ │   (Files)   │ │
+│ └─────────────┘ │    │ └─────────────┘ │    │ └─────────────┘ │
 │ │  Mobile     │ │    │ │  Express.js │ │    │ │  Auth       │ │
 │ │(React Native)│ │    │ └─────────────┘ │    │ │  Storage    │ │
 │ └─────────────┘ │    └─────────────────┘    │ └─────────────┘ │
@@ -197,7 +214,21 @@ Crie um arquivo `.env` (opcional, se usar variáveis de ambiente):
 VITE_API_BASE_URL=http://localhost:3000/api/v1
 ```
 
-#### 6. Execute o Sistema
+#### 6. Configure o Frontend Mobile (Flutter)
+
+```bash
+cd ../frontend/mobile
+flutter pub get
+```
+
+**Importante:** Configure a API do Google Maps:
+- Obtenha uma chave em [Google Cloud Console](https://console.cloud.google.com/)
+- Para Android: Adicione em `android/app/src/main/AndroidManifest.xml`
+- Para iOS: Adicione em `ios/Runner/Info.plist`
+
+Veja mais detalhes em `frontend/mobile/README.md`
+
+#### 7. Execute o Sistema
 
 **Terminal 1 - Backend:**
 ```bash
@@ -215,6 +246,12 @@ npm run dev
 
 O frontend estará rodando em: `http://localhost:5173`
 
+**Terminal 3 - Frontend Mobile (opcional):**
+```bash
+cd frontend/mobile
+flutter run
+```
+
 ### Comandos Disponíveis
 
 #### Backend
@@ -226,6 +263,11 @@ O frontend estará rodando em: `http://localhost:5173`
 - `npm run dev` - Inicia o servidor de desenvolvimento
 - `npm run build` - Gera build de produção
 - `npm run preview` - Preview do build de produção
+
+#### Frontend Mobile
+- `flutter run` - Executa o app em modo debug
+- `flutter build apk` - Gera APK para Android
+- `flutter build ios` - Gera build para iOS
 
 ## Acesso ao Sistema
 
