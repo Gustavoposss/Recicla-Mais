@@ -17,6 +17,10 @@ const logger = require('./middleware/logger');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Configuração de trust proxy para funcionar corretamente com proxies reversos (Render, Heroku, etc)
+// Isso permite que o Express confie nos headers X-Forwarded-For, X-Forwarded-Proto, etc
+app.set('trust proxy', true);
+
 // Middlewares de segurança
 app.use(helmet({
   contentSecurityPolicy: {
